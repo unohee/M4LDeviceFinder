@@ -51,6 +51,19 @@ function loadDevices() {
     
 }
 
+function extractID(list){
+    var id = []; 
+    for (i=0;i<list.length;i++){
+        if(list[i]=='id'){
+            //filter 'id' from devices
+        }else{
+            //only takes actual id in decimal pattern.
+            id.push(list[i]);
+        }
+    }
+    return id;
+}
+
 function getDeviceList() {
     loadDevices();
     // Get device list
@@ -72,26 +85,21 @@ function getDeviceList() {
     }
 }
 
-function getParameterValue(index){
+function getParamList(index){
     parameters = [];
     if(deviceID.length > 0){
         var device = new LiveAPI('id',deviceID[index]);
         var paramId = device.get('parameters')
+        extractID(paramId);
         for (i=0;i<paramId.length;i+=2){
             var id = paramId[i+1];
             var p_id = new LiveAPI('id', id);
             var params = new LiveAPI('id', p_id[1]); //getting all parameters from the device
-            var value = params.get('value');
             var name = params.get('name');
-            var max = params.get('max');
-            var min = params.get('min');
-            parameters.push(name,value,max,min);
+            parameters.push(name);
             parameters = parameters.map(function(item) {
-                //change this code lines accordingly.
-                // Convert each item to a string and prepend 'param'
                 return item.toString();
             });
-            
         }
         // Output the entire list as an array   
         outlet(0,'param', parameters);
@@ -100,11 +108,34 @@ function getParameterValue(index){
     }
 }
 
+function getDict(name) {
+    // Find the device by its name
+    var d = new Dict('preset');
+    for (var i = 0; i < deviceID.length; i++) {
+        if (deviceName[i] == name) {
+            var device = new LiveAPI("id " + deviceID[i]);
+            var n = device.getcount('parameters');
+            var p_id = extractID(device.get('parameters'));
+            
+            d.clear(); //clear the dict before populate
+            for(i=0;i<p_id.length;i++){
+                var param = new LiveAPI('id', p_id[i]);
+                var name = param.get('name');
+                var value = param.get('value');
+                var max = param.get('max');
+                var min = param.get('min');
+                d.set(name,value,max,min);
+            }
+            break;
+        }
+    }
+}
+
 function bang(){
     getDeviceList();
-    getParameterValue(0);
+    getParamList(0);
 }
 
 //initialization
 getDeviceList();
-getParameterValue(0);
+getParamList(0);
