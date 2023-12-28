@@ -116,7 +116,8 @@ function loadDict(name) {
             var device = new LiveAPI("id " + deviceID[i]);
             var n = device.getcount('parameters');
             var p_id = extractID(device.get('parameters'));
-            
+            post('Parameter count::'+n+'\n');
+            outlet(0, 'paramcount',n );
             d.clear(); //clear the dict before populate
             for(i=0;i<p_id.length;i++){
                 var param = new LiveAPI('id', p_id[i]);
