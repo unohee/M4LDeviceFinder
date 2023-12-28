@@ -1,5 +1,5 @@
 autowatch = 1; // Automatically recompile when the script changes
-outlets = 1; // Set the number of outlets
+outlets = 2; // Set the number of outlets
 
 
 var parentId;
@@ -7,7 +7,6 @@ var deviceID = [];
 var deviceName = [];
 var parameters = [];
 var loadState = 0;
-
 
 function loadDevices() {
     // Function to get the canonical parent's path
@@ -108,11 +107,12 @@ function getParamList(index){
     }
 }
 
-function getDict(name) {
+function loadDict(name) {
     // Find the device by its name
     var d = new Dict('preset');
     for (var i = 0; i < deviceID.length; i++) {
         if (deviceName[i] == name) {
+            var name_this = name;
             var device = new LiveAPI("id " + deviceID[i]);
             var n = device.getcount('parameters');
             var p_id = extractID(device.get('parameters'));
@@ -120,12 +120,13 @@ function getDict(name) {
             d.clear(); //clear the dict before populate
             for(i=0;i<p_id.length;i++){
                 var param = new LiveAPI('id', p_id[i]);
-                var name = param.get('name');
-                var value = param.get('value');
-                var max = param.get('max');
-                var min = param.get('min');
-                d.set(name,value,max,min);
+                var title = name_this+'::'+param.get('name')+'::';
+                d.replace(title+'id', p_id[i]);
+                d.replace(title+'value', param.get('value'));
+                d.replace(title+'maximum', param.get('max'));
+                d.replace(title+'minimum', param.get('min'));
             }
+            outlet(1, 'bang'); //send bang when all list population is completed
             break;
         }
     }
